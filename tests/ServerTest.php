@@ -6,6 +6,7 @@ use PhpBg\Rtsp\Message\MessageException;
 use PhpBg\Rtsp\Message\MessageFactory;
 use PhpBg\Rtsp\Message\Request;
 use PhpBg\Rtsp\Server;
+use PhpBg\Rtsp\ServerException;
 use PHPUnit\Framework\TestCase;
 use React\Socket\ConnectionInterface;
 
@@ -48,6 +49,8 @@ class ServerTest extends TestCase
             /** @var Request $request */
             $this->assertSame(1, count($request->headers));
             $this->assertSame('1', $request->getHeader('cseq'));
+
+            return MessageFactory::response();
         });
 
         $server->on('error', function($exception) {
@@ -80,22 +83,23 @@ class ServerTest extends TestCase
         $this->assertInstanceOf(MessageException::class, $error);
     }
 
-    /**
-     * @expectedException \PhpBg\Rtsp\ServerException
-     */
     public function testCallbackDoNotReturnResponse() {
         $server = new Server(function () {
             return false;
         });
 
-        $server->on('error', function($exception) {
-            throw $exception;
+        $error = null;
+        $server->on('error', function($exception) use (&$error) {
+            $error = $exception;
         });
 
         $server->listen($this->socket);
 
         $this->socket->emit('connection', array($this->connection));
         $this->connection->emit('data', array("OPTIONS / RTSP/1.0\r\nCseq:1\r\n\r\n"));
+
+        $this->assertInstanceOf(ServerException::class, $error);
+        $this->assertTrue(strpos($error->getMessage(), 'boolean')>0);
     }
 
     public function testRequestWithResponse() {

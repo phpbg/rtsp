@@ -17,6 +17,7 @@
   ],
   "require": {
     "react/socket": "^1.1",
+    "react/promise": "^2.7",
     "psr/log": "^1.0",
     "myclabs/php-enum": "^1.5",
     "evenement/evenement": "3.0"

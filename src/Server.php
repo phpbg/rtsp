@@ -27,9 +27,12 @@
 namespace PhpBg\Rtsp;
 
 use Evenement\EventEmitter;
+use PhpBg\Rtsp\Message\MessageFactory;
 use PhpBg\Rtsp\Message\Request;
 use PhpBg\Rtsp\Message\RequestParser;
 use PhpBg\Rtsp\Message\Response;
+use React\Promise\FulfilledPromise;
+use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
 
@@ -56,7 +59,10 @@ class Server extends EventEmitter
     /**
      * Server constructor
      *
-     * @param callable $callback Callback that will receive (Request, React\Socket\ConnectionInterface) and may return a Response
+     * @param callable $callback
+     *   Callback that will receive (PhpBg\Rtsp\Message\Request, React\Socket\ConnectionInterface) and return
+     *     * a PhpBg\Rtsp\Message\Response
+     *     * a React\Promise\PromiseInterface that will resolve in a Response
      */
     public function __construct(Callable $callback)
     {
@@ -120,12 +126,33 @@ class Server extends EventEmitter
             $this->emit('error', [$e]);
             return;
         }
-        if (isset($response)) {
-            if ($response instanceof Response) {
-                $connection->write($response->toTransport());
+        // Convert all non-promise response to promises
+        // There is little overhead for this, but this allows simpler code
+        if (!isset($response) || !$response instanceof PromiseInterface) {
+            $response = new FulfilledPromise($response);
+        }
+
+        $response->done(function ($resolvedResponse) use ($connection) {
+            if ($resolvedResponse instanceof Response) {
+                $connection->write($resolvedResponse->toTransport());
                 return;
             }
-            $this->emit('error', [new ServerException("Your handler did return something, but it wasn't a Response")]);
-        }
+            $message = 'The response callback is expected to resolve with an object implementing PhpBg\Rtsp\Message\Response, but resolved with "%s" instead.';
+            $message = sprintf($message, is_object($resolvedResponse) ? get_class($resolvedResponse) : gettype($resolvedResponse));
+            $this->emit('error', [new ServerException($message)]);
+        }, function ($error) use ($connection) {
+            $message = 'The response callback is expected to resolve with an object implementing PhpBg\Rtsp\Message\Response, but rejected with "%s" instead.';
+            $message = sprintf($message, is_object($error) ? get_class($error) : gettype($error));
+            $previous = null;
+            if ($error instanceof \Throwable || $error instanceof \Exception) {
+                $previous = $error;
+            }
+            $exception = new \RuntimeException($message, null, $previous);
+            $this->emit('error', [$exception]);
+
+            $rtspResponse = MessageFactory::response(500, [], null, 'internal server error');
+            $connection->write($rtspResponse->toTransport());
+        });
     }
+
 }
