@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "b0c37b06ad8f1e9baea9d7f809db64ce",
+    "content-hash": "405936b9de43a2fe59fa95703f6eabe9",
     "packages": [
         {
             "name": "evenement/evenement",
-            "version": "3.0.0",
+            "version": "v3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/igorw/evenement.git",
-                "reference": "a07c927e0faa7c42176216679daad8403b5d5fe2"
+                "reference": "531bfb9d15f8aa57454f5f0285b18bec903b8fb7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/igorw/evenement/zipball/a07c927e0faa7c42176216679daad8403b5d5fe2",
-                "reference": "a07c927e0faa7c42176216679daad8403b5d5fe2",
+                "url": "https://api.github.com/repos/igorw/evenement/zipball/531bfb9d15f8aa57454f5f0285b18bec903b8fb7",
+                "reference": "531bfb9d15f8aa57454f5f0285b18bec903b8fb7",
                 "shasum": ""
             },
             "require": {
@@ -27,11 +27,6 @@
                 "phpunit/phpunit": "^6.0"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.0-dev"
-                }
-            },
             "autoload": {
                 "psr-0": {
                     "Evenement": "src"
@@ -52,7 +47,7 @@
                 "event-dispatcher",
                 "event-emitter"
             ],
-            "time": "2017-07-23T20:23:05+00:00"
+            "time": "2017-07-23T21:35:13+00:00"
         },
         {
             "name": "myclabs/php-enum",
