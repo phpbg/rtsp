@@ -128,11 +128,12 @@ class Server extends EventEmitter
         }
         // Convert all non-promise response to promises
         // There is little overhead for this, but this allows simpler code
-        if (!isset($response) || !$response instanceof PromiseInterface) {
+        if (!($response instanceof PromiseInterface)) {
             $response = new FulfilledPromise($response);
         }
 
-        $response->done(function ($resolvedResponse) use ($connection) {
+        // We should probably use done() instead of then(), but done() is only part of ExtendedPromiseInterface
+        $response->then(function ($resolvedResponse) use ($connection) {
             if ($resolvedResponse instanceof Response) {
                 $connection->write($resolvedResponse->toTransport());
                 return;
