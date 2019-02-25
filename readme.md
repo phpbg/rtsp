@@ -41,6 +41,7 @@ This is almost the same example as the previous one, but with a more flexible an
 `phpbg/rtsp` comes with some handy middlewares that will help you build a rfc compliant application:
 * `AutoCseq`: automatically add cseq header to your responses
 * `AutoContentLength`: automatically add content-length to your responses
+* `Log`: Automatically log request and responses
 
 ```php
 require __DIR__ . '/../vendor/autoload.php';
@@ -51,22 +52,7 @@ $loop = React\EventLoop\Factory::create();
 $socket = new \React\Socket\TcpServer('tcp://0.0.0.0:5540', $loop);
 
 $middlewares = [
-    function (\PhpBg\Rtsp\Message\Request $request, \React\Socket\ConnectionInterface $connection, $next) {
-        // echo request middleware
-        echo $request;
-        return $next($request, $connection);
-    },
-    function (\PhpBg\Rtsp\Message\Request $request, \React\Socket\ConnectionInterface $connection, $next) {
-        // echo response middleware
-        $response = $next($request, $connection);
-        if (!($response instanceof \React\Promise\PromiseInterface)) {
-            $response = new \React\Promise\FulfilledPromise($response);
-        }
-        return $response->then(function($resolvedResponse) {
-            echo $resolvedResponse."\r\n";
-            return $resolvedResponse;
-        });
-    },
+    new \PhpBg\Rtsp\Middleware\Log(),
     new \PhpBg\Rtsp\Middleware\AutoCseq(),
     new \PhpBg\Rtsp\Middleware\AutoContentLength(),
     function (\PhpBg\Rtsp\Message\Request $request, \React\Socket\ConnectionInterface $connection) {
