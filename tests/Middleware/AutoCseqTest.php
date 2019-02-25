@@ -36,7 +36,7 @@ use PhpBg\Rtsp\Tests\Mock\ParametrizedResponseMiddleware;
 use PHPUnit\Framework\TestCase;
 use React\Promise\PromiseInterface;
 
-class AutoCseqTestTest extends TestCase
+class AutoCseqTest extends TestCase
 {
     public function testAddHeader() {
         $middleware = new AutoCseq();
