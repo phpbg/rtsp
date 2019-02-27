@@ -33,12 +33,14 @@ use PhpBg\Rtsp\Middleware\Log;
 use PhpBg\Rtsp\Tests\ConnectionStub;
 use PhpBg\Rtsp\Tests\Mock\EmptyResponseMiddleware;
 use PhpBg\Rtsp\Tests\Mock\ParametrizedResponseMiddleware;
+use PhpBg\Rtsp\Tests\Mock\RejectMiddleware;
 use Psr\Log\LoggerInterface;
 use React\Promise\PromiseInterface;
+use React\Promise\RejectedPromise;
 
 class LogTest extends MockeryTestCase
 {
-    public function testAddHeader() {
+    public function testResolved() {
         $logger = \Mockery::spy(LoggerInterface::class);
         $middleware = new Log($logger);
 
@@ -53,6 +55,28 @@ class LogTest extends MockeryTestCase
             $extractedResponse = $response;
         });
         $this->assertTrue($extractedResponse instanceof Response);
+        $logger->shouldHaveReceived('log')->twice();
+    }
+
+    public function testRejectedString() {
+        $logger = \Mockery::spy(LoggerInterface::class);
+        $middleware = new Log($logger);
+        $request = new Request();
+
+        $response = $middleware($request, new ConnectionStub(), new RejectMiddleware('foo'));
+
+        $this->assertTrue($response instanceof RejectedPromise);
+        $logger->shouldHaveReceived('log')->twice();
+    }
+
+    public function testRejectedException() {
+        $logger = \Mockery::spy(LoggerInterface::class);
+        $middleware = new Log($logger);
+        $request = new Request();
+
+        $response = $middleware($request, new ConnectionStub(), new RejectMiddleware(new \Exception('foo')));
+
+        $this->assertTrue($response instanceof RejectedPromise);
         $logger->shouldHaveReceived('log')->twice();
     }
 }

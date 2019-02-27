@@ -32,6 +32,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
+use function React\Promise\reject;
 use React\Socket\ConnectionInterface;
 
 /**
@@ -42,11 +43,19 @@ class Log
 
     private $logger;
     private $level;
+    private $errorLevel;
 
-    public function __construct(LoggerInterface $logger, $level = LogLevel::DEBUG)
+    /**
+     * Log constructor.
+     * @param LoggerInterface $logger
+     * @param string $level Standard request / response log level
+     * @param string $errorLevel Errors log level
+     */
+    public function __construct(LoggerInterface $logger, $level = LogLevel::DEBUG, $errorLevel = LogLevel::WARNING)
     {
         $this->logger = $logger;
         $this->level = $level;
+        $this->errorLevel = $errorLevel;
     }
 
     /**
@@ -67,6 +76,13 @@ class Log
         return $response->then(function (Response $resolvedResponse) use ($request) {
             $this->logger->log($this->level, "Response:\r\n$resolvedResponse");
             return $resolvedResponse;
+        }, function($reason) {
+            if ($reason instanceof \Exception) {
+                $this->logger->log("Internal server error", ['exception' => $reason]);
+            } else {
+                $this->logger->log("Unexpected internal server error", ['data' => $reason]);
+            }
+            return reject($reason);
         });
     }
 }
