@@ -78,9 +78,9 @@ class Log
             return $resolvedResponse;
         }, function($reason) {
             if ($reason instanceof \Exception) {
-                $this->logger->log("Internal server error", ['exception' => $reason]);
+                $this->logger->log($this->errorLevel, "Internal server error", ['exception' => $reason]);
             } else {
-                $this->logger->log("Unexpected internal server error", ['data' => $reason]);
+                $this->logger->log($this->errorLevel, "Unexpected internal server error", ['data' => $reason]);
             }
             return reject($reason);
         });
